@@ -1,2 +1,2 @@
 # kuberes
-GO Client for retrieveing requests and limits on Kubernetes 
+Kubernetes GO client to retrieve configured resources Requests / Limits grouped by Namespace
