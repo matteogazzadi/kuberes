@@ -10,7 +10,6 @@ import (
 	"k8s.io/client-go/kubernetes"
 	ctrl "sigs.k8s.io/controller-runtime"
 
-	"github.com/fatih/color"
 	"github.com/rodaine/table"
 )
 
@@ -90,17 +89,24 @@ func main() {
 	}
 	sort.Strings(keys)
 
-	// Generate the on screen Table
-	headerFmt := color.New(color.FgGreen, color.Underline).SprintfFunc()
-	columnFmt := color.New(color.FgYellow).SprintfFunc()
+	var total domain.PodStats
 
-	tbl := table.New("Namespace", "CPU (Request)", "CPU (Limit)", "Memory (Request)", "Memory (Limit)")
-	tbl.WithHeaderFormatter(headerFmt).WithFirstColumnFormatter(columnFmt)
+	// Generate the on screen Table
+	tbl := table.New("Namespace", "CPU-Request (mCore)", "CPU-Limit (mCore)", "Memory-Request (Mi)", "Memory-Limit (Mi)")
 
 	for _, k := range keys {
 		stats := resources[k]
 		tbl.AddRow(stats.Namespace, stats.Cpu.Request, stats.Cpu.Limit, stats.Memory.Request, stats.Memory.Limit)
+
+		total.Cpu.Request += stats.Cpu.Request
+		total.Cpu.Limit += stats.Cpu.Limit
+		total.Memory.Request += stats.Memory.Request
+		total.Memory.Limit += stats.Memory.Limit
 	}
+
+	// Add total line
+	tbl.AddRow("-----", "-----", "-----", "-----", "-----")
+	tbl.AddRow("Total", total.Cpu.Request, total.Cpu.Limit, total.Memory.Request, total.Memory.Limit)
 
 	tbl.Print()
 }
