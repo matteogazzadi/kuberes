@@ -3,7 +3,6 @@ module github.com/matteogazzadi/kuberes
 go 1.19
 
 require (
-	github.com/fatih/color v1.13.0
 	github.com/rodaine/table v1.1.0
 	k8s.io/api v0.26.0
 	k8s.io/apimachinery v0.26.0
@@ -33,8 +32,6 @@ require (
 	github.com/josharian/intern v1.0.0 // indirect
 	github.com/json-iterator/go v1.1.12 // indirect
 	github.com/mailru/easyjson v0.7.6 // indirect
-	github.com/mattn/go-colorable v0.1.9 // indirect
-	github.com/mattn/go-isatty v0.0.14 // indirect
 	github.com/matttproud/golang_protobuf_extensions v1.0.2 // indirect
 	github.com/modern-go/concurrent v0.0.0-20180306012644-bacd9c7ef1dd // indirect
 	github.com/modern-go/reflect2 v1.0.2 // indirect
