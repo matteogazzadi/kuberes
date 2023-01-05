@@ -7,7 +7,7 @@ This repository provides `kuberes` tool.
 
 ## What is `kuberes`?
 
-`kuberes` is a tool to summarize the configured  resources `requests` and `limits` for Kuberentes POD in a given cluster. 
+`kuberes` is a tool to summarize the configured  resources `requests` and `limits` for Kubereetes POD in a given cluster. 
 
 Here is a demo of `kuberes`:
 ![kuberes demo](docs/kuberes-demo.gif)
