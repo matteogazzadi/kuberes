@@ -1,4 +1,4 @@
-package statshelper
+package helpers
 
 import (
 	"sync"

@@ -2,18 +2,51 @@ package main
 
 import (
 	"context"
+	"flag"
 	"fmt"
 	"sort"
+	"strings"
 	"time"
 
 	calc "github.com/matteogazzadi/kuberes/pkg/calculator"
 	domain "github.com/matteogazzadi/kuberes/pkg/domain"
-	k8shelper "github.com/matteogazzadi/kuberes/pkg/k8shelper"
+	helper "github.com/matteogazzadi/kuberes/pkg/helpers"
 	"k8s.io/client-go/kubernetes"
 	ctrl "sigs.k8s.io/controller-runtime"
-
-	"github.com/rodaine/table"
 )
+
+// Arguments Parameter
+var groupByNamespace bool
+var outputAsTable bool
+var outputAsCsv bool
+var csvOutputFilePath string
+
+// Init Function - Arguments parsing
+func init() {
+	var outputFormat string
+
+	flag.BoolVar(&groupByNamespace, "group-by-ns", true, "Should group statistics by namespace ?")
+	flag.StringVar(&outputFormat, "output", "table", "Output type. Valid values are: table,csv")
+	flag.StringVar(&csvOutputFilePath, "csv-path", "", "Full Path to the .CSV File to produce")
+	flag.Parse()
+
+	// Check if output parameter is valid
+	switch strings.ToLower(outputFormat) {
+	case "table":
+		outputAsTable = true
+		outputAsCsv = false
+	case "csv":
+		outputAsTable = false
+		outputAsCsv = true
+	default:
+		panic("Unrecognized 'output' value '" + outputFormat + "'")
+	}
+
+	// Check if CSV output Path is valid (only if output is CSV)
+	if outputAsCsv && csvOutputFilePath == "" {
+		panic("CSV Output path is not set")
+	}
+}
 
 // Main function - Application Entry Point
 func main() {
@@ -26,15 +59,13 @@ func main() {
 	clientset := kubernetes.NewForConfigOrDie(config)
 
 	// Get All Pods in cluster
-	pods, err := k8shelper.GetAllPods(clientset, ctx)
+	pods, err := helper.GetAllPods(clientset, ctx)
 
 	if err != nil {
 		panic(err)
 	}
 
 	var resources []domain.K8sStats
-
-	groupByNamespace := true
 
 	// Calculate Resources
 	calc.CalculateResources(groupByNamespace, &pods, &resources)
@@ -44,26 +75,20 @@ func main() {
 		return resources[i].Namespace < resources[j].Namespace
 	})
 
-	// Table output
-	var tbl table.Table
+	// =============== //
+	// Generate Output //
+	// =============== //
 
-	// Generate the on screen Table
-	if groupByNamespace {
-		tbl = table.New("Namespace", "CPU-Request (mCore)", "CPU-Limit (mCore)", "Memory-Request (Mi)", "Memory-Limit (Mi)")
+	if outputAsTable {
+		// Table Output
+		helper.WriteOutputAsTable(&resources, groupByNamespace)
 	} else {
-		tbl = table.New("Namespace", "Pod Name", "CPU-Request (mCore)", "CPU-Limit (mCore)", "Memory-Request (Mi)", "Memory-Limit (Mi)")
-	}
-
-	for _, stats := range resources {
-		if groupByNamespace {
-			tbl.AddRow(stats.Namespace, stats.Cpu.Request, stats.Cpu.Limit, stats.Memory.Request, stats.Memory.Limit)
-		} else {
-			tbl.AddRow(stats.Namespace, stats.PodName, stats.Cpu.Request, stats.Cpu.Limit, stats.Memory.Request, stats.Memory.Limit)
+		if outputAsCsv && csvOutputFilePath != "" {
+			helper.WriteOutputAsCsv(&resources, groupByNamespace, csvOutputFilePath)
 		}
-
 	}
-	tbl.Print()
 
+	// Report Elapsed Time
 	fmt.Println()
 	fmt.Println("Elapsed: ", time.Since(startTime).Milliseconds(), "ms")
 }

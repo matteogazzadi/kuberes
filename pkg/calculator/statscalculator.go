@@ -4,7 +4,7 @@ import (
 	"sync"
 
 	domain "github.com/matteogazzadi/kuberes/pkg/domain"
-	helper "github.com/matteogazzadi/kuberes/pkg/stats-helper"
+	helper "github.com/matteogazzadi/kuberes/pkg/helpers"
 	v1 "k8s.io/api/core/v1"
 )
 
