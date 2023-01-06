@@ -2,111 +2,93 @@ package main
 
 import (
 	"context"
-	"log"
+	"flag"
+	"fmt"
 	"sort"
+	"strings"
+	"time"
 
+	calc "github.com/matteogazzadi/kuberes/pkg/calculator"
 	domain "github.com/matteogazzadi/kuberes/pkg/domain"
-	k8shelper "github.com/matteogazzadi/kuberes/pkg/k8shelper"
+	helper "github.com/matteogazzadi/kuberes/pkg/helpers"
 	"k8s.io/client-go/kubernetes"
 	ctrl "sigs.k8s.io/controller-runtime"
-
-	"github.com/rodaine/table"
 )
+
+// Arguments Parameter
+var groupByNamespace bool
+var outputAsTable bool
+var outputAsCsv bool
+var csvOutputFilePath string
+
+// Init Function - Arguments parsing
+func init() {
+	var outputFormat string
+
+	flag.BoolVar(&groupByNamespace, "group-by-ns", true, "Should group statistics by namespace ?")
+	flag.StringVar(&outputFormat, "output", "table", "Output type. Valid values are: table,csv")
+	flag.StringVar(&csvOutputFilePath, "csv-path", "", "Full Path to the .CSV File to produce")
+	flag.Parse()
+
+	// Check if output parameter is valid
+	switch strings.ToLower(outputFormat) {
+	case "table":
+		outputAsTable = true
+		outputAsCsv = false
+	case "csv":
+		outputAsTable = false
+		outputAsCsv = true
+	default:
+		panic("Unrecognized 'output' value '" + outputFormat + "'")
+	}
+
+	// Check if CSV output Path is valid (only if output is CSV)
+	if outputAsCsv && csvOutputFilePath == "" {
+		panic("CSV Output path is not set")
+	}
+}
 
 // Main function - Application Entry Point
 func main() {
+
+	startTime := time.Now().UTC()
 
 	// 1. Initialize Kubernets Clients
 	ctx := context.Background()
 	config := ctrl.GetConfigOrDie()
 	clientset := kubernetes.NewForConfigOrDie(config)
 
-	// Resources Map object
-	resources := make(map[string]*domain.PodStats)
-
-	// Retrieve the list of namespaces in cluster
-	namespaces, err := k8shelper.GetAllNamespace(clientset, ctx)
+	// Get All Pods in cluster
+	pods, err := helper.GetAllPods(clientset, ctx)
 
 	if err != nil {
 		panic(err)
 	}
 
-	// Loop all namespace and calculate POD resources
-	for _, namespace := range namespaces {
-		pods, err := k8shelper.GetPodsByNamespace(clientset, ctx, namespace.Name)
+	var resources []domain.K8sStats
 
-		if err != nil {
-			log.Fatal(err)
-			continue
+	// Calculate Resources
+	calc.CalculateResources(groupByNamespace, &pods, &resources)
+
+	// Sort Resources by Namespace
+	sort.Slice(resources, func(i, j int) bool {
+		return resources[i].Namespace < resources[j].Namespace
+	})
+
+	// =============== //
+	// Generate Output //
+	// =============== //
+
+	if outputAsTable {
+		// Table Output
+		helper.WriteOutputAsTable(&resources, groupByNamespace)
+	} else {
+		if outputAsCsv && csvOutputFilePath != "" {
+			helper.WriteOutputAsCsv(&resources, groupByNamespace, csvOutputFilePath)
 		}
-
-		// Check if entry for the given namespace exist in the local map.
-		_, ok := resources[namespace.Name]
-
-		// If not present, add it.
-		if !ok {
-
-			var newStats domain.PodStats
-
-			newStats.Namespace = namespace.Name
-			resources[namespace.Name] = &newStats
-		}
-
-		// Loop on pods
-		for _, pod := range pods {
-
-			stats, _ := resources[namespace.Name]
-
-			// Loop On Containers
-			for _, container := range pod.Spec.Containers {
-
-				// CPU
-				cpuRequest := container.Resources.Requests.Cpu().MilliValue()
-				cpuLimit := container.Resources.Limits.Cpu().MilliValue()
-
-				// Memory
-				memRequest, _ := container.Resources.Requests.Memory().AsInt64()
-				memLimit, _ := container.Resources.Limits.Memory().AsInt64()
-
-				// Convert MB to Mib
-				memRequest = memRequest / 1048576
-				memLimit = memLimit / 1048576
-
-				stats.Cpu.Limit += cpuLimit
-				stats.Cpu.Request += cpuRequest
-
-				stats.Memory.Limit += memLimit
-				stats.Memory.Request += memRequest
-			}
-		}
-
 	}
 
-	// Sort the resources key alphabetically
-	keys := make([]string, 0, len(resources))
-	for k := range resources {
-		keys = append(keys, k)
-	}
-	sort.Strings(keys)
-
-	var total domain.PodStats
-
-	// Generate the on screen Table
-	tbl := table.New("Namespace", "CPU-Request (mCore)", "CPU-Limit (mCore)", "Memory-Request (Mi)", "Memory-Limit (Mi)")
-
-	for _, k := range keys {
-		stats := resources[k]
-		tbl.AddRow(stats.Namespace, stats.Cpu.Request, stats.Cpu.Limit, stats.Memory.Request, stats.Memory.Limit)
-
-		total.Cpu.Request += stats.Cpu.Request
-		total.Cpu.Limit += stats.Cpu.Limit
-		total.Memory.Request += stats.Memory.Request
-		total.Memory.Limit += stats.Memory.Limit
-	}
-
-	// Add total line
-	tbl.AddRow("-----", "-----", "-----", "-----", "-----")
-	tbl.AddRow("Total", total.Cpu.Request, total.Cpu.Limit, total.Memory.Request, total.Memory.Limit)
-
-	tbl.Print()
+	// Report Elapsed Time
+	fmt.Println()
+	fmt.Println("Elapsed: ", time.Since(startTime).Milliseconds(), "ms")
 }

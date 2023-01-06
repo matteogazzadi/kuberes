@@ -12,4 +12,15 @@ This repository provides `kuberes` tool.
 Here is a demo of `kuberes`:
 ![kuberes demo](docs/kuberes-demo.gif)
 
+## Arguments
 
+`kuberes` accept multiple arguments allowing to produce report directly in console or to a `.csv` file.
+
+Arguments can be passed usin `-` or `--`.
+
+|    Argument   |  Type  |  Default |                Description                |
+| ------------- | ------ | -------- | ----------------------------------------- |
+| `output`      | String | `table`  |  Output type. Valid values are: table,csv |
+| `group-by-ns` |  Bool  | `true`   |  Should group statistics by namespace ?   |
+| `csv-path`    | String | ``       |  Full Path to the .CSV File to produce    |
+ 
