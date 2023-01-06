@@ -1,6 +1,7 @@
 package domain
 
-type PodStats struct {
+type K8sStats struct {
+	PodName   string
 	Namespace string
 	Cpu       Resource
 	Memory    Resource
