@@ -20,14 +20,19 @@ var groupByNamespace bool
 var outputAsTable bool
 var outputAsCsv bool
 var csvOutputFilePath string
+var excludeNamespace []string
+var matchNamespace string
 
 // Init Function - Arguments parsing
 func init() {
 	var outputFormat string
+	var excludeNs string
 
 	flag.BoolVar(&groupByNamespace, "group-by-ns", true, "Should group statistics by namespace ?")
 	flag.StringVar(&outputFormat, "output", "table", "Output type. Valid values are: table,csv")
 	flag.StringVar(&csvOutputFilePath, "csv-path", "", "Full Path to the .CSV File to produce")
+	flag.StringVar(&excludeNs, "exclude-ns", "", "Namespaces Names to be excluded separated by ,")
+	flag.StringVar(&matchNamespace, "match-ns-regex", "", "Namespaces Names to be matched on the given RegEx")
 	flag.Parse()
 
 	// Check if output parameter is valid
@@ -46,6 +51,10 @@ func init() {
 	if outputAsCsv && csvOutputFilePath == "" {
 		panic("CSV Output path is not set")
 	}
+
+	if excludeNs != "" {
+		excludeNamespace = strings.Split(excludeNs, ",")
+	}
 }
 
 // Main function - Application Entry Point
@@ -59,7 +68,7 @@ func main() {
 	clientset := kubernetes.NewForConfigOrDie(config)
 
 	// Get All Pods in cluster
-	pods, err := helper.GetAllPods(clientset, ctx)
+	pods, err := helper.GetAllPods(&excludeNamespace, matchNamespace, clientset, ctx)
 
 	if err != nil {
 		panic(err)
