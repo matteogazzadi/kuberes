@@ -19,7 +19,8 @@ import (
 var groupByNamespace bool
 var outputAsTable bool
 var outputAsCsv bool
-var csvOutputFilePath string
+var outputAsXlsx bool
+var outputFilePath string
 var excludeNamespace []string
 var matchNamespace string
 
@@ -29,8 +30,8 @@ func init() {
 	var excludeNs string
 
 	flag.BoolVar(&groupByNamespace, "group-by-ns", true, "Should group statistics by namespace ?")
-	flag.StringVar(&outputFormat, "output", "table", "Output type. Valid values are: table,csv")
-	flag.StringVar(&csvOutputFilePath, "csv-path", "", "Full Path to the .CSV File to produce")
+	flag.StringVar(&outputFormat, "output", "table", "Output type. Valid values are: table,csv,xlsx")
+	flag.StringVar(&outputFilePath, "file-path", "", "Full Path to the .CSV/.XLSX File to produce")
 	flag.StringVar(&excludeNs, "exclude-ns", "", "Namespaces Names to be excluded separated by ,")
 	flag.StringVar(&matchNamespace, "match-ns-regex", "", "Namespaces Names to be matched on the given RegEx")
 	flag.Parse()
@@ -40,16 +41,22 @@ func init() {
 	case "table":
 		outputAsTable = true
 		outputAsCsv = false
+		outputAsXlsx = false
 	case "csv":
 		outputAsTable = false
 		outputAsCsv = true
+		outputAsXlsx = false
+	case "xlsx":
+		outputAsTable = false
+		outputAsCsv = false
+		outputAsXlsx = true
 	default:
 		panic("Unrecognized 'output' value '" + outputFormat + "'")
 	}
 
-	// Check if CSV output Path is valid (only if output is CSV)
-	if outputAsCsv && csvOutputFilePath == "" {
-		panic("CSV Output path is not set")
+	// Check if output file Path is valid (only if output is CSV or XLSX)
+	if (outputAsCsv || outputAsXlsx) && outputFilePath == "" {
+		panic("Output file path is not set")
 	}
 
 	if excludeNs != "" {
@@ -92,8 +99,12 @@ func main() {
 		// Table Output
 		helper.WriteOutputAsTable(&resources, groupByNamespace)
 	} else {
-		if outputAsCsv && csvOutputFilePath != "" {
-			helper.WriteOutputAsCsv(&resources, groupByNamespace, csvOutputFilePath)
+		if outputAsCsv && outputFilePath != "" {
+			helper.WriteOutputAsCsv(&resources, groupByNamespace, outputFilePath)
+		} else {
+			if outputAsXlsx && outputFilePath != "" {
+				helper.WriteOutputAsXlsx(&resources, groupByNamespace, outputFilePath)
+			}
 		}
 	}
 

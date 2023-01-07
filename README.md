@@ -25,9 +25,9 @@ Arguments can be passed using `-` or `--`.
 
 |      Argument    |  Type  |  Default |                    Description                     |
 | ---------------- | ------ | -------- | -------------------------------------------------- |
-| `output`         | String | `table`  |  Output type. Valid values are: table,csv          |
+| `output`         | String | `table`  |  Output type. Valid values are: table,csv,xlsx     |
 | `group-by-ns`    |  Bool  | `true`   |  Should group statistics by namespace ?            |
-| `csv-path`       | String | `""`     |  Full Path to the .CSV File to produce             |
+| `file-path`      | String | `""`     |  Full Path to the .CSV/.XLSX File to produce       |
 | `exclude-ns`     | String | `""`     |  Namespaces names to be ignored, comma separated   |
 | `match-ns-regex` | String | `""`     |  Namespaces Names to be matched on the given RegEx |
 
@@ -41,7 +41,10 @@ Arguments can be passed using `-` or `--`.
 .\kuberes --group-by-ns=false
 
 # List Resource grouped by Namespace and save in a .CSV file
-.\kuberes --output=csv --csv-path="output.csv"
+.\kuberes --output=csv --file-path="output.csv"
+
+# List Resource grouped by Namespace and save in a .XLSX file
+.\kuberes --output=xlsx --file-path="output.xlsx"
 
 # List Resources grouped by Namespace in table format, exclude namespaces: default and kube-system
 .\kuberes --exclude-ns="default,kube-system"
