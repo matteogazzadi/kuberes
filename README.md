@@ -27,9 +27,9 @@ Arguments can be passed using `-` or `--`.
 | ---------------- | ------ | -------- | -------------------------------------------------- |
 | `output`         | String | `table`  |  Output type. Valid values are: table,csv          |
 | `group-by-ns`    |  Bool  | `true`   |  Should group statistics by namespace ?            |
-| `csv-path`       | String | ``       |  Full Path to the .CSV File to produce             |
-| `exclude-ns`     | String | ``       |  Namespaces names to be ignored, comma separated   |
-| `match-ns-regex` | String | ``       |  Namespaces Names to be matched on the given RegEx |
+| `csv-path`       | String | `""`     |  Full Path to the .CSV File to produce             |
+| `exclude-ns`     | String | `""`     |  Namespaces names to be ignored, comma separated   |
+| `match-ns-regex` | String | `""`     |  Namespaces Names to be matched on the given RegEx |
 
 ## Examples
 
