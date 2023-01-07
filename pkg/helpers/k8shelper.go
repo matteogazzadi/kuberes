@@ -3,6 +3,7 @@ package helpers
 import (
 	"context"
 	"log"
+	"regexp"
 	"sync"
 
 	v1 "k8s.io/api/core/v1"
@@ -37,7 +38,9 @@ func GetAllNamespace(clientset *kubernetes.Clientset, ctx context.Context) ([]v1
 }
 
 // Get all Pods
-func GetAllPods(clientset *kubernetes.Clientset, ctx context.Context) ([]v1.Pod, error) {
+func GetAllPods(excludeNamespace *[]string, matchNamespace string, clientset *kubernetes.Clientset, ctx context.Context) ([]v1.Pod, error) {
+
+	matchNsRegex, err := regexp.Compile(matchNamespace)
 
 	namespaces, err := GetAllNamespace(clientset, ctx)
 
@@ -54,6 +57,15 @@ func GetAllPods(clientset *kubernetes.Clientset, ctx context.Context) ([]v1.Pod,
 
 	// Loop on Namespace
 	for _, namespace := range namespaces {
+
+		if contains(excludeNamespace, namespace.Name) {
+			continue
+		}
+
+		if matchNsRegex != nil && !matchNsRegex.MatchString(namespace.Name) {
+			continue
+		}
+
 		wg.Add(1)
 		go GetPodsByNamespace(clientset, ctx, namespace.Name, podChannel, &wg)
 	}
@@ -70,4 +82,18 @@ func GetAllPods(clientset *kubernetes.Clientset, ctx context.Context) ([]v1.Pod,
 	}
 
 	return pods, nil
+}
+
+func contains(s *[]string, str string) bool {
+
+	if s != nil && len(*s) > 0 {
+		for _, v := range *s {
+			if v == str {
+				return true
+			}
+		}
+		return false
+	} else {
+		return false
+	}
 }
