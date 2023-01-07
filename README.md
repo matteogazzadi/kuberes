@@ -50,6 +50,6 @@ Arguments can be passed using `-` or `--`.
 .\kuberes --exclude-ns="default,kube-system"
 
 # List Resources grouped by Namespace in table format, include namespace containing word "test" only
-.\kuberes --math-ns-regex="^.*test.*$"
+.\kuberes --match-ns-regex="^.*test.*$"
 
 ```
