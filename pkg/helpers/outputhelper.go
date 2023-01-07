@@ -260,22 +260,22 @@ func WriteOutputAsXlsx(resources *[]domain.K8sStats, groupByNamespace bool, xlsx
 		f.SetCellStyle(SHEET_NAME, axis, axis, boldStyle)
 
 		// CPU Request
-		axis, _ = excelize.CoordinatesToCellName(2, row)
+		axis, _ = excelize.CoordinatesToCellName(3, row)
 		f.SetCellFormula(SHEET_NAME, axis, "=SUM(C2:C"+strconv.Itoa(lastDataRow)+")")
 		f.SetCellStyle(SHEET_NAME, axis, axis, boldStyle)
 
 		// CPU Limit
-		axis, _ = excelize.CoordinatesToCellName(3, row)
+		axis, _ = excelize.CoordinatesToCellName(4, row)
 		f.SetCellFormula(SHEET_NAME, axis, "=SUM(D2:D"+strconv.Itoa(lastDataRow)+")")
 		f.SetCellStyle(SHEET_NAME, axis, axis, boldStyle)
 
 		// Memory Request
-		axis, _ = excelize.CoordinatesToCellName(4, row)
+		axis, _ = excelize.CoordinatesToCellName(5, row)
 		f.SetCellFormula(SHEET_NAME, axis, "=SUM(E2:E"+strconv.Itoa(lastDataRow)+")")
 		f.SetCellStyle(SHEET_NAME, axis, axis, boldStyle)
 
 		// CPU Limit
-		axis, _ = excelize.CoordinatesToCellName(5, row)
+		axis, _ = excelize.CoordinatesToCellName(6, row)
 		f.SetCellFormula(SHEET_NAME, axis, "=SUM(F2:F"+strconv.Itoa(lastDataRow)+")")
 		f.SetCellStyle(SHEET_NAME, axis, axis, boldStyle)
 	}
